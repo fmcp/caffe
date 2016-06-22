@@ -50,7 +50,7 @@ template <typename Dtype>
       Reset();
     }
 
-    if (epoch_ % balancingEpoch_ == 0 && balance_ && do_balance_ && iter_ > init_balance_iteration_) {
+    if (epoch_ % balancingEpoch_ == 0 && balance_ && do_balance_ && iter_ > init_balance_iteration_ && phase_ == 0) {
       LOG(INFO) << "New balanced partition";
       mtx_.lock();
       getBalancedPartition(full_hdf_filenames_, subclasses_, full_labels_, selected_files_, hdf_filenames_, labels_);
