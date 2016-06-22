@@ -90,7 +90,9 @@ bool FlowDataLayer<Dtype>::FillBatch(FlowBatch<Dtype>* batch) {
 
   	Dtype* top_data = batch->data_.mutable_cpu_data();
   	Dtype* top_label = batch->label_.mutable_cpu_data(); 
-    Dtype* top_videoId = batch->videoId_.mutable_cpu_data(); 
+    if (phase_ == 1) { // Test time.
+      Dtype* top_videoId = batch->videoId_.mutable_cpu_data(); 
+    }
 
   	herr_t status = H5Fclose(file_id);
   	CHECK_GE(status, 0) << "Failed to close HDF5 file: " << hdf_filenames_[0];
@@ -116,8 +118,10 @@ bool FlowDataLayer<Dtype>::FillBatch(FlowBatch<Dtype>* batch) {
         // Copy label.
     		top_label[item_id - current_file] = labels_[file_permutation_[item_id]];
 
-        // Copy videoId.
-        top_videoId[item_id - current_file] = videoId_[file_permutation_[item_id]];
+        if (phase_ == 1) { // Test time.
+          // Copy videoId.
+          top_videoId[item_id - current_file] = videoId_[file_permutation_[item_id]];
+        }
 
     		trans_time += timer.MicroSeconds();
       }
@@ -146,7 +150,8 @@ template <typename Dtype>
     prefetch_count_ = this->layer_param_.flow_data_param().prefetch_count();
     meanval_ = this->layer_param_.flow_data_param().meanval();
     dfactor_ = 1.0 / this->layer_param_.flow_data_param().compress_factor();
-    init_balance_iteration_ = this->layer_param_.flow_data_param().init_balance_iteration_();
+    init_balance_iteration_ = this->layer_param_.flow_data_param().init_balance_iteration();
+    phase_ = this->layer_param_.flow_data_param().phase();
     finish_threads_ = false;
     forw_files_ = 0;
     do_balance_ = false;
@@ -214,11 +219,13 @@ template <typename Dtype>
     	this->prefetch_[i].label_.Reshape(label_shape);
     }
 
-    // videoId
-    vector<int> videoId_shape(1, batch_size);
-    top[2]->Reshape(videoId_shape);
-    for (int i = 0; i < this->prefetch_count_; ++i) {
-      this->prefetch_[i].videoId_.Reshape(videoId_shape);
+    if (phase_ == 1) { // Test time.
+      // videoId
+      vector<int> videoId_shape(1, batch_size);
+      top[2]->Reshape(videoId_shape);
+      for (int i = 0; i < this->prefetch_count_; ++i) {
+        this->prefetch_[i].videoId_.Reshape(videoId_shape);
+      }
     }
 
     herr_t status = H5Fclose(file_id);
@@ -298,10 +305,12 @@ template <typename Dtype>
     top[1]->ReshapeLike(batch->label_);
     // Copy the labels.
     caffe_copy(batch->label_.count(), batch->label_.cpu_data(), top[1]->mutable_cpu_data());
-    // Reshape to loaded videoIds.
-    top[2]->ReshapeLike(batch->videoId_);
-    // Copy the videoIds.
-    caffe_copy(batch->videoId_.count(), batch->videoId_.cpu_data(), top[2]->mutable_cpu_data());
+    if (phase_ == 1) { // Test time.
+      // Reshape to loaded videoIds.
+      top[2]->ReshapeLike(batch->videoId_);
+      // Copy the videoIds.
+      caffe_copy(batch->videoId_.count(), batch->videoId_.cpu_data(), top[2]->mutable_cpu_data());
+    }
 
     prefetch_free_.push(batch);
 

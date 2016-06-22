@@ -98,6 +98,7 @@ protected:
   unsigned int epoch_;
   unsigned int iter_;
   unsigned int init_balance_iteration_;
+  int phase_;
 };
 
 }  // namespace caffe

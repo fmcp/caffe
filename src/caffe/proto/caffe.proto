@@ -789,8 +789,11 @@ message FlowDataParameter {
   // Specify the compression factor.
   optional uint32 compress_factor = 8 [default = 100];
 
-  // Specify the compression factor.
-  optional uint32 init_balance_iteration_ = 9 [default = 0];
+  // Specify the first iteration where balance is performed.
+  optional uint32 init_balance_iteration = 9 [default = 0];
+
+  // Specify the phase (Training = 0; Test = 1).
+  optional uint32 phase = 10 [default = 0];
 }
 
 message HingeLossParameter {

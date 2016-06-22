@@ -30,10 +30,12 @@ template <typename Dtype>
     top[1]->ReshapeLike(batch->label_);
     // Copy the labels.
     caffe_copy(batch->label_.count(), batch->label_.gpu_data(), top[1]->mutable_gpu_data());
-    // Reshape to loaded videoIds.
-    top[2]->ReshapeLike(batch->videoId_);
-    // Copy the videoIds.
-    caffe_copy(batch->videoId_.count(), batch->videoId_.gpu_data(), top[2]->mutable_gpu_data());
+    if (phase_ == 1) { // Test time.
+      // Reshape to loaded videoIds.
+      top[2]->ReshapeLike(batch->videoId_);
+      // Copy the videoIds.
+      caffe_copy(batch->videoId_.count(), batch->videoId_.gpu_data(), top[2]->mutable_gpu_data());
+    }
     // Ensure the copy is synchronous wrt the host, so that the next batch isn't
     // copied in meanwhile.
     CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));
