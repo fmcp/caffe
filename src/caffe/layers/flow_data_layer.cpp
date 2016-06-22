@@ -90,9 +90,7 @@ bool FlowDataLayer<Dtype>::FillBatch(FlowBatch<Dtype>* batch) {
 
   	Dtype* top_data = batch->data_.mutable_cpu_data();
   	Dtype* top_label = batch->label_.mutable_cpu_data(); 
-    if (phase_ == 1) { // Test time.
-      Dtype* top_videoId = batch->videoId_.mutable_cpu_data(); 
-    }
+    Dtype* top_videoId = batch->videoId_.mutable_cpu_data(); 
 
   	herr_t status = H5Fclose(file_id);
   	CHECK_GE(status, 0) << "Failed to close HDF5 file: " << hdf_filenames_[0];
