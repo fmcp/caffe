@@ -36,6 +36,8 @@ template <typename Dtype>
 void VideoLevelAccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
 
+  vector<int> temp_labels, temp_rlabels, temp_videoIds;
+
   //Copy data.
   const Dtype* bottom_data0 = bottom[0]->cpu_data();
   const Dtype* bottom_data1 = bottom[1]->cpu_data();
@@ -44,11 +46,21 @@ void VideoLevelAccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bot
     labels_.push_back((int)bottom_data0[i]);
     rlabels_.push_back((int)bottom_data1[i]);
     videoIds_.push_back((int)bottom_data2[i]);
+
+    temp_labels.push_back((int)bottom_data0[i]);
+    temp_rlabels.push_back((int)bottom_data1[i]);
+    temp_videoIds.push_back((int)bottom_data2[i]);
   }
+
+  float acc = computeAcc(temp_labels, temp_rlabels, temp_videoIds);
+  top[0]->mutable_cpu_data()[0] = acc;
+  temp_labels.clear();
+  temp_rlabels.clear();
+  temp_videoIds.clear();
 }
 
 template <typename Dtype>
-void VideoLevelAccuracyLayer<Dtype>::computeAcc(const vector<int>& estimLabs, const vector<int>& realLabs, const vector<int>& videoIds) {
+float VideoLevelAccuracyLayer<Dtype>::computeAcc(const vector<int>& estimLabs, const vector<int>& realLabs, const vector<int>& videoIds) {
   // Get unique data.
   std::set<int> uvidsAux(videoIds.begin(), videoIds.end());
   vector<int> uvids(uvidsAux.begin(), uvidsAux.end());
@@ -82,7 +94,7 @@ void VideoLevelAccuracyLayer<Dtype>::computeAcc(const vector<int>& estimLabs, co
       acc++;
     }
   }
-  LOG(INFO) <<  "Video level acc: " << (float)acc / (float)nvids;
+  //LOG(INFO) <<  "Video level acc: " << (float)acc / (float)nvids;
 }
 
 template <typename Dtype>

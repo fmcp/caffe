@@ -55,7 +55,7 @@ class VideoLevelAccuracyLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
     NOT_IMPLEMENTED;
   }
-  virtual void computeAcc(const vector<int>& estimLabs, const vector<int>& realLabs, const vector<int>& videoIds);
+  virtual float computeAcc(const vector<int>& estimLabs, const vector<int>& realLabs, const vector<int>& videoIds);
   virtual int mode(const vector<int>& data);
 
   int label_axis_, outer_num_, inner_num_;
