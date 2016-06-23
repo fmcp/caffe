@@ -95,6 +95,7 @@ float VideoLevelAccuracyLayer<Dtype>::computeAcc(const vector<int>& estimLabs, c
     }
   }
   //LOG(INFO) <<  "Video level acc: " << (float)acc / (float)nvids;
+  return (float)acc / (float)nvids;
 }
 
 template <typename Dtype>
