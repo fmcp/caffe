@@ -48,18 +48,6 @@ class VideoLevelAccuracyLayer : public Layer<Dtype> {
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
-  /**
-   * @param bottom input Blob vector (length 1)
-   *   -# @f$ (N \times C \times H \times W) @f$
-   *      the inputs @f$ x @f$
-   * @param top output Blob vector (length 1)
-   *   -# @f$ (N \times 1 \times K) @f$ or, if out_max_val
-   *      @f$ (N \times 2 \times K) @f$ unless axis set than e.g.
-   *      @f$ (N \times K \times H \times W) @f$ if axis == 1
-   *      the computed outputs @f$
-   *       y_n = \arg\max\limits_i x_{ni}
-   *      @f$ (for @f$ K = 1 @f$).
-   */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   /// @brief Not implemented (non-differentiable function)
@@ -70,10 +58,7 @@ class VideoLevelAccuracyLayer : public Layer<Dtype> {
   virtual void computeAcc(const vector<int>& estimLabs, const vector<int>& realLabs, const vector<int>& videoIds);
   virtual int mode(const vector<int>& data);
 
-  bool out_max_val_;
-  size_t top_k_;
-  bool has_axis_;
-  int axis_;
+  int label_axis_, outer_num_, inner_num_;
   vector<int> labels_;
   vector<int> rlabels_;
   vector<int> videoIds_;

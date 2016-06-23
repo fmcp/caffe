@@ -9,54 +9,27 @@
 namespace caffe {
 
 template <typename Dtype> VideoLevelAccuracyLayer<Dtype>::~VideoLevelAccuracyLayer() {
-  for (int i=0;i<labels_.size();i++) {
-    LOG(INFO) << labels_[i] << " " << rlabels_[i] << " " << videoIds_[i];
-  }
   computeAcc(labels_, rlabels_, videoIds_);
 }
 
 template <typename Dtype>
 void VideoLevelAccuracyLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
-  const ArgMaxParameter& argmax_param = this->layer_param_.argmax_param();
-  out_max_val_ = argmax_param.out_max_val();
-  top_k_ = argmax_param.top_k();
-  has_axis_ = argmax_param.has_axis();
-  CHECK_GE(top_k_, 1) << "top k must not be less than 1.";
-  if (has_axis_) {
-    axis_ = bottom[0]->CanonicalAxisIndex(argmax_param.axis());
-    CHECK_GE(axis_, 0) << "axis must not be less than 0.";
-    CHECK_LE(axis_, bottom[0]->num_axes()) <<
-      "axis must be less than or equal to the number of axis.";
-    CHECK_LE(top_k_, bottom[0]->shape(axis_))
-      << "top_k must be less than or equal to the dimension of the axis.";
-  } else {
-    CHECK_LE(top_k_, bottom[0]->count(1))
-      << "top_k must be less than or equal to"
-        " the dimension of the flattened bottom blob per instance.";
-  }
-}
+      const vector<Blob<Dtype>*>& top) {}
 
 template <typename Dtype>
 void VideoLevelAccuracyLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  int num_top_axes = bottom[0]->num_axes();
-  if ( num_top_axes < 3 ) num_top_axes = 3;
-  std::vector<int> shape(num_top_axes, 1);
-  if (has_axis_) {
-    // Produces max_ind or max_val per axis
-    shape = bottom[0]->shape();
-    shape[axis_] = top_k_;
-  } else {
-    shape[0] = bottom[0]->shape(0);
-    // Produces max_ind
-    shape[2] = top_k_;
-    if (out_max_val_) {
-      // Produces max_ind and max_val
-      shape[1] = 2;
-    }
-  }
-  top[0]->Reshape(shape);
+  label_axis_ =
+      bottom[0]->CanonicalAxisIndex(this->layer_param_.accuracy_param().axis());
+  outer_num_ = bottom[0]->count(0, label_axis_);
+  inner_num_ = bottom[0]->count(label_axis_ + 1);
+  CHECK_EQ(outer_num_ * inner_num_, bottom[1]->count())
+      << "Number of labels must match number of predictions; "
+      << "e.g., if label axis == 1 and prediction shape is (N, C, H, W), "
+      << "label count (number of labels) must be N*H*W, "
+      << "with integer values in {0, 1, ..., C-1}.";
+  vector<int> top_shape(0);  // Accuracy is a scalar; 0 axes.
+  top[0]->Reshape(top_shape);
 }
 
 template <typename Dtype>
