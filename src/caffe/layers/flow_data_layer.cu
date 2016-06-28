@@ -58,6 +58,7 @@ template <typename Dtype>
       mtx_.unlock();
       do_balance_ = false;
     }
+    showBlob(top[0]);
   }
 
   INSTANTIATE_LAYER_GPU_FORWARD(FlowDataLayer);
